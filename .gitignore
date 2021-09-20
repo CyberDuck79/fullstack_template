@@ -1,0 +1,11 @@
+back_src/dist
+back_src/node_modules
+front_src/dist
+front_src/node_modules
+db_data
+pgadmin
+back.env
+db_admin.env
+db.env
+front.env
+.DS_Store
