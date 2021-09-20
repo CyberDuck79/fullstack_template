@@ -2,12 +2,11 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import * as Joi from '@hapi/joi';
 import { APP_FILTER } from '@nestjs/core';
-//import DatabaseModule from './database/database.module';
-//import UsersModule from './users/users.module';
+import DatabaseModule from './database/database.module';
+import UsersModule from './users/users.module';
 //import AuthenticationModule from './authentication/authentication.module';
-//import ExceptionsLoggerFilter from './utils/exceptionsLogger.filter';
+import ExceptionsLoggerFilter from './utils/exceptionsLogger.filter';
 
- 
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -29,16 +28,16 @@ import { APP_FILTER } from '@nestjs/core';
         OAUTH_ME_URL: Joi.string().required(),
       })
     }),
-    //DatabaseModule,
-    //UsersModule,
+    DatabaseModule,
+    UsersModule,
     //AuthenticationModule,
   ],
   controllers: [],
   providers: [
-    //{
-    //  provide: APP_FILTER,
-    //  useClass: ExceptionsLoggerFilter,
-    //}
+    {
+      provide: APP_FILTER,
+      useClass: ExceptionsLoggerFilter,
+    }
   ],
 })
 export class AppModule {}
