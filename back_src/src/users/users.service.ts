@@ -2,7 +2,7 @@ import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import User from './user.entity';
-import CreateUserDto from './dto/createUser.dto';
+import CreateUser from './interface/createUser.interface';
 import UpdateUserDto from './dto/updateUser.dto';
 
 @Injectable()
@@ -20,20 +20,29 @@ export default class UsersService {
     throw new HttpException('User with this id does not exist', HttpStatus.NOT_FOUND);
   }
 
+  async getByEmail(email: string): Promise<User> {
+    const user = await this.usersRepository.findOne({ email });
+    if (user) {
+      return user;
+    }
+    throw new HttpException('User with this email does not exist', HttpStatus.NOT_FOUND);
+  }
+
   async getBy42Id(id42: number): Promise<User> {
     const user = await this.usersRepository.findOne({ id42 });
     if (user) {
       return user;
     }
+    throw new HttpException('User with this 42id does not exist', HttpStatus.NOT_FOUND);
   }
 
-  async create(userData: CreateUserDto): Promise<User> {
+  async create(userData: CreateUser): Promise<User> {
     const newUser = this.usersRepository.create(userData);
     await this.usersRepository.save(newUser);
     return newUser;
   }
 
-  async changeName(id: number, userData: UpdateUserDto): Promise<User> {
+  async updateUser(id: number, userData: UpdateUserDto): Promise<User> {
     await this.usersRepository.update(id, userData);
     const updatedUser = await this.getById(id);
     if (updatedUser) {
