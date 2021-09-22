@@ -1,14 +1,15 @@
 import UsersService from "../users/users.service";
 import RegisterDto from "./dto/register.dto";
 import * as bcrypt from 'bcrypt';
-import PostgresErrorCode from "src/database/postgresErrorCodes.enum";
-import { HttpException, HttpStatus } from "@nestjs/common";
+import PostgresErrorCode from "../database/postgresErrorCodes.enum";
+import { HttpException, HttpStatus, Injectable } from "@nestjs/common";
 import WebToken from "./interface/webToken.interface";
 import TokenPayload from "./interface/tokenPayload.interface";
 import { JwtService } from "@nestjs/jwt";
 import { ConfigService } from "@nestjs/config";
 import User from "../users/user.entity";
 
+@Injectable()
 export default class AuthenticationService {
 	constructor(
 	  private readonly usersService: UsersService,
@@ -28,6 +29,7 @@ export default class AuthenticationService {
       if (error?.code === PostgresErrorCode.UniqueViolation) {
         throw new HttpException('User with that email already exists', HttpStatus.BAD_REQUEST);
       }
+      console.error('error ', error)
       throw new HttpException('Something went wrong', HttpStatus.INTERNAL_SERVER_ERROR);
 	  }
 	}
