@@ -1,5 +1,5 @@
 import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
-import { Exclude, Expose } from 'class-transformer';
+import { Exclude, Expose, Transform } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
 
 @Entity()
@@ -13,7 +13,12 @@ export default class User {
   @Column({ unique: true, nullable: true })
   @Expose({ groups: ['private'] })
   @ApiProperty()
-  id42: number;
+  @Transform(({ value }) => {
+    if (value !== null) {
+      return value;
+    }
+  })
+  id42?: number;
 
   @Column({ unique: true })
   @Expose({ groups: ['private'] })

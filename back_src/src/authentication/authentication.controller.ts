@@ -15,9 +15,9 @@ export default class AuthenticationController {
     private readonly authenticationService: AuthenticationService
   ) {}
 
-  @ApiOperation({summary: "register a user"})
-  @ApiResponse({ status: 201, description: 'The user has been successfully registered'})
-  @ApiResponse({ status: 400, description: 'Invalid informations provided'})
+  @ApiOperation({ summary: "register a user" })
+  @ApiResponse({ status: 201, description: 'The user has been successfully registered' })
+  @ApiResponse({ status: 400, description: 'Invalid informations provided' })
   @Post('register')
   async register(@Body() registrationData: RegisterDto, @Req() request: Request): Promise<AuthenticationData> {
     const user = await this.authenticationService.register(registrationData);
@@ -41,9 +41,9 @@ export default class AuthenticationController {
  
   @HttpCode(200)
   @UseGuards(PasswordAuthenticationGuard)
-  @ApiOperation({summary: "return authentication data"})
-  @ApiResponse({ status: 200, description: 'The user has been successfully logged'})
-  @ApiResponse({ status: 400, description: 'Wrong credentials provided'})
+  @ApiOperation({ summary: "return authentication data" })
+  @ApiResponse({ status: 200, description: 'The user has been successfully logged' })
+  @ApiResponse({ status: 400, description: 'Wrong credentials provided' })
   @Post('login')
   logIn(@Req() request: RequestWithUser): AuthenticationData {
     const { user } = request;
@@ -67,11 +67,11 @@ export default class AuthenticationController {
 
   @HttpCode(200)
   @UseGuards(JwtAuthenticationGuard)
-  @ApiOperation({summary: "Delete cookies and invalidate tokens"})
+  @ApiOperation({ summary: "Delete cookies and invalidate tokens" })
   @ApiBearerAuth('bearer-authentication')
   @ApiCookieAuth('cookie-authentication')
-  @ApiResponse({ status: 200, description: 'The user has been successfully logged out'})
-  @ApiResponse({ status: 401, description: 'Unauthorized'})
+  @ApiResponse({ status: 200, description: 'The user has been successfully logged out' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
   @Post('logout')
   async logOut(@Req() request: RequestWithUser) {
     request.res.setHeader('Set-Cookie', this.authenticationService.getCookiesForLogOut());

@@ -227,7 +227,6 @@ describe('AppController (e2e)', () => {
           .expect((res) => {
             expect(res.body).toEqual({
               id: expect.any(Number),
-              id42: null,
               name: user1.name,
               email: user1.email,
             });
@@ -244,7 +243,6 @@ describe('AppController (e2e)', () => {
           .expect((res) => {
             expect(res.body).toEqual({
               id: expect.any(Number),
-              id42: null,
               name: 'flavien',
               email: user1.email,
             });
