@@ -75,8 +75,8 @@ describe('AppController (e2e)', () => {
     email: 'flavien.henrion@cyberduck.blog',
     password: 'qwertyuop'
   }
-  let user1Cookies: Array<string>;
-  let user1Bearers: Array<string>;
+  var user1Cookies: Array<string>;
+  var user1Bearers: Array<string>;
 
   const cookies_regex = /Authentication=.*; HttpOnly; Path=\/; Expires=.*,Refresh=.*; HttpOnly; Path=\/; Expires=.*/;
 
@@ -97,7 +97,7 @@ describe('AppController (e2e)', () => {
           })
           .expect({
             statusCode: 400,
-            message: "User with that email already exists"
+            message: "User with that name already exists"
           })
           .expect(400);
       });
@@ -189,27 +189,43 @@ describe('AppController (e2e)', () => {
       it('should return empty cookies', async () => {
         const res = await request(app.getHttpServer())
           .post('/authentication/logout')
-          .set('cookie', user1Cookies[0])
+          .set('cookie', user1Cookies[1])
           .expect(200)
           .expect('set-cookie', empty_cookies);
         user1Cookies = res.headers['set-cookie'];
       });
+      it('relog to continue tests', async () => {
+        const res = await request(app.getHttpServer())
+          .post('/authentication/login')
+          .send({
+            email: user1.email,
+            password: user1.password
+          })
+          .expect((res) => {
+            expect(res.body.authentication).toBeDefined();
+            expect(res.body.refresh).toBeDefined();
+          })
+          .expect(200)
+          .expect('set-cookie', cookies_regex);
+        user1Cookies = res.headers['set-cookie'];
+      });
+      /*
+      // recall refresh later in test and make this test
+      it('old refresh token should be invalidated', () => {
+        return request(app.getHttpServer())
+          .get('/authentication/refresh')
+          .set('authorization', `bearer ${user1Bearers[1]}`)
+          .expect({
+            statusCode: 401,
+            message: "Unauthorized"
+          })
+          .expect(401);
+      });
+      */
     });
   });
-
+  
   describe('/users', () => {
-    it('login for tests', async () => {
-      const res = await request(app.getHttpServer())
-        .post('/authentication/login')
-        .send({
-          email: user1.email,
-          password: user1.password
-        })
-        .expect(200)
-        .expect('set-cookie', cookies_regex);
-      user1Cookies = res.headers['set-cookie'];
-      user1Bearers = [res.body.authentication, res.body.refresh];
-    });
     describe('/me', () => {
       it('without cookie => should return 401', () => {
         return request(app.getHttpServer())
@@ -253,3 +269,5 @@ describe('AppController (e2e)', () => {
   });
 
 });
+
+

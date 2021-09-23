@@ -1,12 +1,11 @@
-import { Body, Req, Controller, HttpCode, Post, UseGuards, Res } from '@nestjs/common';
+import { Body, Req, Controller, HttpCode, Post, UseGuards, Get } from '@nestjs/common';
 import AuthenticationService from './authentication.service';
 import RegisterDto from './dto/register.dto';
-import RequestWithUser from './interface/requestWithUser.interface';
+import AuthenticatedRequest from './interface/authenticatedRequest.interface';
 import PasswordAuthenticationGuard from './guard/password.guard';
-import { Request } from 'express';
 import AuthenticationData from './interface/authenticationData.interface';
-import JwtAuthenticationGuard from './guard/jwt.guard';
 import { ApiBearerAuth, ApiCookieAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import JwtRefreshGuard from './guard/jwtRefresh.guard';
 
 @ApiTags('authentication')
 @Controller('authentication')
@@ -19,24 +18,8 @@ export default class AuthenticationController {
   @ApiResponse({ status: 201, description: 'The user has been successfully registered' })
   @ApiResponse({ status: 400, description: 'Invalid informations provided' })
   @Post('register')
-  async register(@Body() registrationData: RegisterDto, @Req() request: Request): Promise<AuthenticationData> {
-    const user = await this.authenticationService.register(registrationData);
-    const {
-      authentication,
-      refresh,
-      accessTokenCookie,
-      refreshTokenCookie,
-      accessTokenExpiration,
-      refreshTokenExpiration
-    } = this.authenticationService.generateTokensForUser(user)
-    request.res.setHeader('Set-Cookie', [accessTokenCookie, refreshTokenCookie]);
-    // add refresh to database
-    return {
-      authentication,
-      refresh,
-      accessTokenExpiration,
-      refreshTokenExpiration
-    };
+  async register(@Body() registrationData: RegisterDto) {
+    await this.authenticationService.register(registrationData);
   }
  
   @HttpCode(200)
@@ -45,8 +28,8 @@ export default class AuthenticationController {
   @ApiResponse({ status: 200, description: 'The user has been successfully logged' })
   @ApiResponse({ status: 400, description: 'Wrong credentials provided' })
   @Post('login')
-  logIn(@Req() request: RequestWithUser): AuthenticationData {
-    const { user } = request;
+  async logIn(@Req() request: AuthenticatedRequest): Promise<AuthenticationData> {
+    const { user, res } = request;
     const {
       authentication,
       refresh,
@@ -55,8 +38,40 @@ export default class AuthenticationController {
       accessTokenExpiration,
       refreshTokenExpiration
     } = this.authenticationService.generateTokensForUser(user)
-    request.res.setHeader('Set-Cookie', [accessTokenCookie, refreshTokenCookie]);
-    // add refresh to database
+    res.setHeader('Set-Cookie', [accessTokenCookie, refreshTokenCookie]);
+    await this.authenticationService.saveRefreshToken(refresh, user.id);
+    return {
+      authentication,
+      refresh,
+      accessTokenExpiration,
+      refreshTokenExpiration
+    };
+  }
+
+  @UseGuards(JwtRefreshGuard)
+  @Get('refresh')
+  @ApiOperation({summary: "Refresh the tokens"})
+  @ApiBearerAuth('bearer-refresh')
+  @ApiCookieAuth('cookie-refresh')
+  @ApiResponse({ status: 200, description: 'The tokens has been successfully refreshed' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  async refresh(@Req() request: AuthenticatedRequest): Promise<AuthenticationData> {
+    const { user, cookies, headers, res } = request;
+    let refreshToken = cookies?.Refresh;
+    if (!refreshToken) {
+      refreshToken = headers?.authorization?.split(' ')[1] as string
+    }
+    await this.authenticationService.deleteRefreshToken(refreshToken, user.id);
+    const {
+      authentication,
+      refresh,
+      accessTokenCookie,
+      refreshTokenCookie,
+      accessTokenExpiration,
+      refreshTokenExpiration
+    } = this.authenticationService.generateTokensForUser(user)
+    res.setHeader('Set-Cookie', [accessTokenCookie, refreshTokenCookie]);
+    await this.authenticationService.saveRefreshToken(refresh, user.id);
     return {
       authentication,
       refresh,
@@ -66,15 +81,20 @@ export default class AuthenticationController {
   }
 
   @HttpCode(200)
-  @UseGuards(JwtAuthenticationGuard)
+  @UseGuards(JwtRefreshGuard)
   @ApiOperation({ summary: "Delete cookies and invalidate tokens" })
   @ApiBearerAuth('bearer-authentication')
   @ApiCookieAuth('cookie-authentication')
   @ApiResponse({ status: 200, description: 'The user has been successfully logged out' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @Post('logout')
-  async logOut(@Req() request: RequestWithUser) {
-    request.res.setHeader('Set-Cookie', this.authenticationService.getCookiesForLogOut());
-    // delete refresh from database
+  async logOut(@Req() request: AuthenticatedRequest) {
+    const { user, cookies, headers, res } = request;
+    let refreshToken = cookies?.Refresh;
+    if (!refreshToken) {
+      refreshToken = headers?.authorization?.split(' ')[1] as string
+    }
+    await this.authenticationService.deleteRefreshToken(refreshToken, user.id);
+    res.setHeader('Set-Cookie', this.authenticationService.getCookiesForLogOut());
   }
 }

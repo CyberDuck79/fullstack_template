@@ -1,6 +1,6 @@
 import { Body, Controller, Get, Put, Req, SerializeOptions, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiCookieAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
-import RequestWithUser from 'src/authentication/interface/requestWithUser.interface';
+import AuthenticatedRequest from '../authentication/interface/authenticatedRequest.interface';
 import JwtAuthenticationGuard from '../authentication/guard/jwt.guard';
 import UpdateUserDto from './dto/updateUser.dto';
 import UsersService from './users.service';
@@ -22,7 +22,7 @@ export default class UsersController {
   @ApiResponse({ status: 200, description: 'OK' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @Get('me')
-  getById(@Req() request: RequestWithUser) {
+  getById(@Req() request: AuthenticatedRequest) {
     const { user } = request;
     return this.userService.getById(user.id);
   }
@@ -34,7 +34,7 @@ export default class UsersController {
   @ApiResponse({ status: 200, description: 'User updated' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @Put('me')
-  updateById(@Req() request: RequestWithUser, @Body() userData: UpdateUserDto) {
+  updateById(@Req() request: AuthenticatedRequest, @Body() userData: UpdateUserDto) {
     const { user } = request;
     return this.userService.updateUser(user.id, userData);
   }

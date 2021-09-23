@@ -4,6 +4,7 @@ import { Repository } from 'typeorm';
 import User from './user.entity';
 import CreateUser from './interface/createUser.interface';
 import UpdateUserDto from './dto/updateUser.dto';
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export default class UsersService {
@@ -36,6 +37,19 @@ export default class UsersService {
     throw new HttpException('User with this 42id does not exist', HttpStatus.NOT_FOUND);
   }
 
+  async getUserIfRefreshTokenMatches(refreshToken: string, id: number): Promise<User> {
+    const user = await this.usersRepository.findOne({ id });
+    const isRefreshTokenValid = user.hashedRefreshTokens.find(async (hashedRefreshToken) => {
+      await bcrypt.compare(
+        hashedRefreshToken,
+        refreshToken
+      );
+    });
+    if (isRefreshTokenValid) {
+      return user;
+    }
+  }
+
   async create(userData: CreateUser): Promise<User> {
     const newUser = this.usersRepository.create(userData);
     await this.usersRepository.save(newUser);
@@ -49,5 +63,9 @@ export default class UsersService {
       return updatedUser;
     }
     throw new HttpException('User not found', HttpStatus.NOT_FOUND);
+  }
+
+  async updateRefreshTokens(id: number, hashedRefreshTokens: string[]) {
+    await this.usersRepository.update(id, { hashedRefreshTokens });
   }
 }

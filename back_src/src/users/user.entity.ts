@@ -21,6 +21,11 @@ export default class User {
   id42?: number;
 
   @Column({ unique: true })
+  @Expose()
+  @ApiProperty()
+  name: string;
+
+  @Column({ unique: true })
   @Expose({ groups: ['private'] })
   @ApiProperty()
   email: string;
@@ -28,8 +33,6 @@ export default class User {
   @Column()
   password: string;
 
-  @Column({ unique: true })
-  @Expose()
-  @ApiProperty()
-  name: string;
+  @Column("text", { array: true, default: [] })
+  public hashedRefreshTokens: string[];
 }

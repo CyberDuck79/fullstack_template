@@ -20,16 +20,17 @@ export default class AuthenticationService {
 	async register(registrationData: RegisterDto) {
 	  const hashedPassword = await bcrypt.hash(registrationData.password, 10);
 	  try {
-      const createdUser = await this.usersService.create({
+      await this.usersService.create({
         ...registrationData,
         password: hashedPassword
       });
-		  return createdUser;
+		  return;
 	  } catch (error) {
       if (error?.code === PostgresErrorCode.UniqueViolation) {
-        throw new HttpException('User with that email already exists', HttpStatus.BAD_REQUEST);
+        const regex = /Key \((.*)\)=/g;
+        const key = regex.exec(error.detail)[1];
+        throw new HttpException(`User with that ${key} already exists`, HttpStatus.BAD_REQUEST);
       }
-      console.error('error ', error)
       throw new HttpException('Something went wrong', HttpStatus.INTERNAL_SERVER_ERROR);
 	  }
 	}
@@ -101,6 +102,30 @@ export default class AuthenticationService {
       accessTokenExpiration,
       refreshTokenExpiration
     };
+  }
+
+  async saveRefreshToken(refreshToken: string, id: number) {
+    const hashedRefreshToken = await bcrypt.hash(refreshToken, 10);
+    const { hashedRefreshTokens } = await this.usersService.getById(id);
+    hashedRefreshTokens.push(hashedRefreshToken);
+    if (hashedRefreshTokens.length > 10) {
+      hashedRefreshTokens.shift();
+    }
+    await this.usersService.updateRefreshTokens(id, hashedRefreshTokens);
+  }
+
+  async deleteRefreshToken(refreshToken: string, id: number) {
+    const { hashedRefreshTokens } = await this.usersService.getById(id);
+    const tokenIndex = hashedRefreshTokens.findIndex(async (hashedRefreshToken) => {
+      await bcrypt.compare(
+        hashedRefreshToken,
+        refreshToken
+      );
+    });
+    if (tokenIndex > -1) {
+      hashedRefreshTokens.splice(tokenIndex);
+    }
+    await this.usersService.updateRefreshTokens(id, hashedRefreshTokens);
   }
 
   getCookiesForLogOut() {
