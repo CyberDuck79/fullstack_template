@@ -1,4 +1,4 @@
 export default class WebToken {
-	token: string;
-	expire_time: number;
-  }
+  token: string;
+  expire_time: number;
+}

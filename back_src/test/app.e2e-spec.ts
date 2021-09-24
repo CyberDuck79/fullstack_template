@@ -236,7 +236,7 @@ describe('AppController (e2e)', () => {
           })
           .expect(401);
       });
-      it('GET => should return the user', () => {
+      it('GET => should return the private infos of the authenticated user', () => {
         return request(app.getHttpServer())
           .get('/users/me')
           .set('cookie', user1Cookies[0])
@@ -249,11 +249,12 @@ describe('AppController (e2e)', () => {
           })
           .expect(200);
       });
-      it('PUT => should return the updated user', () => {
+      it('PUT => should return the updated authenticated user', () => {
+        user1.name = 'flavien';
         return request(app.getHttpServer())
           .put('/users/me')
           .send({
-            name: 'flavien'
+            name: user1.name
           })
           .set('cookie', user1Cookies[0])
           .expect((res) => {
@@ -261,6 +262,20 @@ describe('AppController (e2e)', () => {
               id: expect.any(Number),
               name: 'flavien',
               email: user1.email,
+            });
+          })
+          .expect(200);
+      });
+    });
+
+    describe('/:id', () => {
+      it('GET => should return the public infos of the user associated to the id', () => {
+        return request(app.getHttpServer())
+          .get('/users/1')
+          .expect((res) => {
+            expect(res.body).toEqual({
+              id: expect.any(Number),
+              name: user1.name,
             });
           })
           .expect(200);

@@ -1,13 +1,13 @@
-import { Body, Controller, Get, Put, Req, SerializeOptions, UseGuards } from '@nestjs/common';
-import { ApiBearerAuth, ApiCookieAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { Body, Controller, Get, Param, Put, Req, SerializeOptions, UseGuards } from '@nestjs/common';
+import { ApiBearerAuth, ApiCookieAuth, ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
 import AuthenticatedRequest from '../authentication/interface/authenticatedRequest.interface';
 import JwtAuthenticationGuard from '../authentication/guard/jwt.guard';
 import UpdateUserDto from './dto/updateUser.dto';
 import UsersService from './users.service';
+import PrivateUserInfos from './interface/privateUserInfos.interface';
+import idParams from '../utils/idParams.interface';
+import publicUserInfos from './interface/publicUserInfos.interface';
 
-@SerializeOptions({
-  groups: ['private']
-})
 @ApiTags('users')
 @Controller('users')
 export default class UsersController {
@@ -15,27 +15,58 @@ export default class UsersController {
     private readonly userService: UsersService
   ) {}
   
-  @UseGuards(JwtAuthenticationGuard)
-  @ApiOperation({ summary: "return user associated with the authentication token" })
+  @ApiOperation({ summary: "Get private infos of the authentivated user" })
   @ApiBearerAuth('bearer-authentication')
   @ApiCookieAuth('cookie-authentication')
-  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({
+    status: 200,
+    type: PrivateUserInfos
+  })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @SerializeOptions({
+    groups: ['private']
+  })
+  @UseGuards(JwtAuthenticationGuard)
   @Get('me')
-  getById(@Req() request: AuthenticatedRequest) {
+  getAuthenticatedUser(@Req() request: AuthenticatedRequest) {
     const { user } = request;
     return this.userService.getById(user.id);
   }
 
-  @UseGuards(JwtAuthenticationGuard)
   @ApiOperation({ summary: "Update user associated with the authentication token" })
   @ApiBearerAuth('bearer-authentication')
   @ApiCookieAuth('cookie-authentication')
-  @ApiResponse({ status: 200, description: 'User updated' })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({
+    status: 200,
+    description: 'User updated',
+    type: PrivateUserInfos
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized'
+  })
+  @SerializeOptions({
+    groups: ['private']
+  })
+  @UseGuards(JwtAuthenticationGuard)
   @Put('me')
-  updateById(@Req() request: AuthenticatedRequest, @Body() userData: UpdateUserDto) {
+  updateAuthenticatedUser(@Req() request: AuthenticatedRequest, @Body() userData: UpdateUserDto) {
     const { user } = request;
     return this.userService.updateUser(user.id, userData);
+  }
+
+  @ApiOperation({ summary: "Get public infos of a user" })
+  @ApiParam({ name: 'id', type: Number, description: 'user id' })
+  @ApiResponse({
+    status: 200,
+    type: publicUserInfos
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'User not found for this id'
+  })
+  @Get(':id')
+  getById(@Param() { id }: idParams) {
+    return this.userService.getById(Number(id));
   }
 }

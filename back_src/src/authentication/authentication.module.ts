@@ -8,6 +8,8 @@ import { JwtModule } from '@nestjs/jwt';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import JwtStrategy from './strategy/jwt.strategy';
 import JwtRefreshTokenStrategy from './strategy/jwtRefresh.strategy';
+import { HttpModule } from '@nestjs/axios';
+import oauth42Strategy from './strategy/oauth42.strategy';
 
 @Module({
   imports: [
@@ -24,8 +26,9 @@ import JwtRefreshTokenStrategy from './strategy/jwtRefresh.strategy';
         },
       }),
     }),
+    HttpModule
 	],
-  providers: [AuthenticationService, PasswordStrategy, JwtStrategy, JwtRefreshTokenStrategy],
+  providers: [AuthenticationService, PasswordStrategy, JwtStrategy, JwtRefreshTokenStrategy, oauth42Strategy],
   controllers: [AuthenticationController]
 })
 export default class AuthenticationModule {}
