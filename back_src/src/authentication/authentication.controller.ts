@@ -7,15 +7,18 @@ import AuthenticationData from './interface/authenticationData.interface';
 import { ApiBearerAuth, ApiCookieAuth, ApiOperation, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
 import JwtRefreshGuard from './guard/jwtRefresh.guard';
 import oauth42AuthenticationGuard from './guard/oauth42.guard';
+import EmailConfirmationService from '../email/emailConfirmation.service';
+import CredentialsDto from './dto/credentials.dto';
 
 @ApiTags('authentication')
 @Controller('authentication')
 export default class AuthenticationController {
   constructor(
-    private readonly authenticationService: AuthenticationService
+    private readonly authenticationService: AuthenticationService,
+    private readonly emailConfirmationService: EmailConfirmationService
   ) {}
 
-  @ApiOperation({ summary: "register a user" })
+  @ApiOperation({ summary: "Register a user" })
   @ApiResponse({
     status: 201,
     description: 'The user has been successfully registered'
@@ -27,6 +30,7 @@ export default class AuthenticationController {
   @Post('register')
   async register(@Body() registrationData: RegisterDto) {
     await this.authenticationService.register(registrationData);
+    await this.emailConfirmationService.sendVerificationLink(registrationData.email, registrationData.name);
   }
 
   @ApiOperation({ summary: "Create and authenticate user with 42 oauth code" })
@@ -59,7 +63,7 @@ export default class AuthenticationController {
     };
   }
   
-  @ApiOperation({ summary: "return authentication data" })
+  @ApiOperation({ summary: "Return authentication data" })
   @ApiResponse({
     status: 200,
     description: 'The user has been successfully logged',
@@ -72,7 +76,7 @@ export default class AuthenticationController {
   @HttpCode(200)
   @UseGuards(PasswordAuthenticationGuard)
   @Post('login')
-  async logIn(@Req() request: AuthenticatedRequest): Promise<AuthenticationData> {
+  async logIn(@Body() _: CredentialsDto, @Req() request: AuthenticatedRequest): Promise<AuthenticationData> {
     const { user, res } = request;
     const {
       authentication,
@@ -92,7 +96,6 @@ export default class AuthenticationController {
     };
   }
 
-  
   @ApiOperation({summary: "Refresh the tokens"})
   @ApiBearerAuth('bearer-refresh')
   @ApiCookieAuth('cookie-refresh')

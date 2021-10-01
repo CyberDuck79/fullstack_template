@@ -30,4 +30,7 @@ export default class User {
 
   @Column("text", { array: true, default: [] })
   public hashedRefreshTokens: string[];
+
+  @Column({ default: false })
+  public isEmailConfirmed: boolean;
 }

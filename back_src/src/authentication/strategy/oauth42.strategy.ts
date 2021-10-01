@@ -3,7 +3,7 @@ import { Injectable } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { ConfigService } from '@nestjs/config';
 import { Strategy } from 'passport-oauth2';
-import UsersService from 'src/users/users.service';
+import UsersService from '../../users/users.service';
 
 @Injectable()
 export default class oauth42Strategy extends PassportStrategy(Strategy, '42')

@@ -8,17 +8,17 @@ up:
 	[ -d pgadmin ] || mkdir pgadmin
 	$(DC) --project-name $(NAME) up --detach
 logs:
-	$(DC) --project-name $(NAME) logs --follow
+	$(DC) --project-name $(NAME) logs --follow --tail=100
 front.logs:
-	$(DC) --project-name $(NAME) logs --follow front
+	$(DC) --project-name $(NAME) logs --follow front --tail=100
 front.shell:
 	$(DC) --project-name $(NAME) exec front sh
 back.logs:
-	$(DC) --project-name $(NAME) logs --follow back
+	$(DC) --project-name $(NAME) logs --follow back --tail=100
 back.shell:
 	$(DC) --project-name $(NAME) exec back sh
 back.test:
-	$(DC) --project-name $(NAME) exec back npm run test
+	$(DC) --project-name $(NAME) exec back npm run test:watch
 stop:
 	$(DC) --project-name $(NAME) stop
 down:

@@ -4,9 +4,9 @@ import AuthenticatedRequest from '../authentication/interface/authenticatedReque
 import JwtAuthenticationGuard from '../authentication/guard/jwt.guard';
 import UpdateUserDto from './dto/updateUser.dto';
 import UsersService from './users.service';
-import PrivateUserInfos from './interface/privateUserInfos.interface';
+import PrivateUserInfos from './swagger/privateUserInfos.type'
 import idParams from '../utils/idParams.interface';
-import publicUserInfos from './interface/publicUserInfos.interface';
+import publicUserInfos from './swagger/publicUserInfos.type'
 
 @ApiTags('users')
 @Controller('users')

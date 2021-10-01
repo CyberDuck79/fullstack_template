@@ -10,6 +10,7 @@ import JwtStrategy from './strategy/jwt.strategy';
 import JwtRefreshTokenStrategy from './strategy/jwtRefresh.strategy';
 import { HttpModule } from '@nestjs/axios';
 import oauth42Strategy from './strategy/oauth42.strategy';
+import { EmailModule } from 'src/email/email.module';
 
 @Module({
   imports: [
@@ -26,7 +27,8 @@ import oauth42Strategy from './strategy/oauth42.strategy';
         },
       }),
     }),
-    HttpModule
+    HttpModule,
+    EmailModule
 	],
   providers: [AuthenticationService, PasswordStrategy, JwtStrategy, JwtRefreshTokenStrategy, oauth42Strategy],
   controllers: [AuthenticationController]

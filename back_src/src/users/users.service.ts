@@ -68,4 +68,10 @@ export default class UsersService {
   async updateRefreshTokens(id: number, hashedRefreshTokens: string[]) {
     await this.usersRepository.update(id, { hashedRefreshTokens });
   }
+
+  async markEmailAsConfirmed(email: string) {
+    return this.usersRepository.update({ email }, {
+      isEmailConfirmed: true
+    });
+  }
 }
